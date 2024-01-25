@@ -1,0 +1,79 @@
+3) Formatos de Almacenamiento
+Las tablas creadas en el punto 2 a partir de archivos en formato csv, deben ser almacenadas en formato Parquet + Snappy. Tener en cuenta además de aplicar particiones para alguna de las tablas.
+
+Cambiando los datos de las tablas a formato Parquet y comprimiendolos en formato Snappy
+  * cd DS-M4-Hue_Hive (entrando al directorio donde estan los datos de nuestros contenedores)
+  * sudo docker-compose -f docker-compose-v2.yml up -d (arrancando los contenedores a usar)
+  * sudo docker exec -it hive-server bash (entrando en nuestro contenedor)
+  * cd .. (saliendo del directorio de /opt)
+  * cd home (entramos al directorio de home por que ahi esta buestros archivos copiados del punto 2)
+  * ls (si deseamos asegurarno ponemos ls para ver los directorios y archivos)
+  * hive (entramos a hive para manipular nuestras bases de datos .hql)
+
+  * SHOW DATABASES; (en hive podenos esta query para mostrar las bases de datos creadas a usar)
+			default
+			integrador
+  * USE INTEGRADOR; (seleccionamos la BBDD integrador, ya que es la que corrimos en el paso 2)
+  * SHOW TABLES; 
+			calendario	-
+			canal_venta	|
+			cliente		|
+			compra		|
+			empleado	|
+			gasto		> TABLAS
+			producto	|
+			proveedor	|
+			sucursal	|	
+			tipo_gasto	|
+			venta		-
+
++ (solo conocimiento) Aqui vemos como fue creada la tabla calendario en el punto 2
+			CREATE EXTERNAL TABLE calendario (
+        			id                      INTEGER,
+       				fecha                 	DATE,
+       				anio                    INTEGER,
+      				mes                   	INTEGER,
+      				dia                     INTEGER,
+      				trimestre               INTEGER, -- 1 to 4
+      				semana                  INTEGER, -- 1 to 52/53
+      				dia_nombre              VARCHAR(9), -- 'Monday', 'Tuesday'...
+     				mes_nombre              VARCHAR(9) -- 'January', 'February'...
+			)
+			ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+			WITH SERDEPROPERTIES (
+				'separatorChar'=',',
+				'skip.header.line.count'='1'
+			)LOCATION '/data/calendario';
+
+Ahora analizamos los datos de la tabla calendario
+  * SELECT * FROM calendario LIMIT 5; (una ves dentro de la BBDD vemos los datos de la tabla calendario o el que prefieran)
+		20150101        2015-01-01      2015    1       1       1       1       Thursday        January
+		20150102        2015-01-02      2015    1       2       1       1       Friday  January
+		20150103        2015-01-03      2015    1       3       1       1       Saturday        January
+		20150104        2015-01-04      2015    1       4       1       1       Sunday  January
+		20150105        2015-01-05      2015    1       5       1       2       Monday  January
+
+Aqui es donde alistamos las variables de creacion de la tabla parquet + snappy
+  * DROP TABLE calendario_parquet_snappy; (siempre para una creacion de un BBDD hay q eliminar si hay coincidencias)
+  * CREATE EXTERNAL TABLE calendario_parquet_snappy(fecha DATE, anio INTEGER, mes INTEGER, dia INTEGER, trimestre INTEGER) STORED AS PARQUET LOCATION '/data/calendario_parquet_snappy/' TBLPROPERTIES ('parquet.compression' = 'SNAPPY'); (aqui creamos una nueva tabla en formato parquet y comprimido en formato Snappy a partir de la tabla ya creada en el punto 2 llamada 'calendario')
+  * INSERT INTO calendario_parquet_snappy SELECT fecha, anio, mes, dia, trimestre FROM calendario; (Insertamos los valores y como querian que apliquemos particiones, entonces solo tomamos los datos que vamos a usar, asi no es una tabla muy grande en columnas pero si mas rapido en lectura)
+
+Ahora verificamos si existe la tabla creada llamada calendario_parquet_snappy y que nos de los 5 primeros datos 
+  * SELECT * FROM calendario_parquet_snappy LIMIT 5; (vemos los dotos de la tabla)
+		2015-01-01      2015    1       1       1
+		2015-01-02      2015    1       2       1
+		2015-01-03      2015    1       3       1
+		2015-01-04      2015    1       4       1
+		2015-01-05      2015    1       5       1
+
+Ahora veremos la velocidad de lectura segun el formato original o el parquet+snappy
+  * SELECT SUM(mes*dia) FROM calendario; -- 225212.0 -- 1.481 seconds
+  * SELECT SUM(mes*dia) FROM calendario_parquet_snappy; -- 225212.0 -- 1.236 seconds
+
+Ahora ya que sabemos como convertir las tablas a otros formatos podemos si deseamos salir de todo
+  * Ctrl+C (salimos de hive)
+  * exit (salimos del contenedor)
+  * sudo docker-compose stop (paramos los contenedores para q nos desgasten mas nuestra maquina)
+  * cd (salimos del directorio DS-M4-Hue_Hive)
+  * exit (salimos de ubuntu)
+  * Nos comemos una pizza por q ya hace hambre...
