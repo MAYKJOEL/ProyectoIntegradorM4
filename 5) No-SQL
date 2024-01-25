@@ -1,0 +1,335 @@
+5) No-SQL
+Se puede utilizar el entorno docker-compose-v3.yml
+
+
+**
+
+1) HBase:
+Instrucciones:
+  
+  * cd herramientas_big_data (entramos a la carpeta donde esta el archivo .yml)
+  * sudo docker-compose -f docker-compose-v3.yml up -d (aperturamos los conetendores que estan en .yml)
+
+	1- sudo docker exec -it hbase-master hbase shell (ingresamos al contenedor)
+ 
+Escribimos dentro lo siguiente:
+
+		Crear una tabla:
+		* create 'personal','personal_data' (Este comando crea una tabla llamada 'personal' con una familia de columnas llamada 'personal_data'. 							  Las tablas en HBase deben tener al menos una familia de columnas.)
+		Listar tablas:
+		* list 'personal' (Este es el comando que se utiliza para listar las tablas en HBase, y ponemos 'personal' como filtro para q busque tablas 				  que concidan o similares; se puede poner solo list)
+
+		Insertar datos en una fila:
+		* put 'personal',1,'personal_data:name','Juan' (Este comando inserta un valor ('Juan') en la columna 'name' de la fila '1' en la familia de 								columnas 'personal_data' de la tabla 'personal'.)
+		* put 'personal',1,'personal_data:city','Córdoba'
+		* put 'personal',1,'personal_data:age','25'
+		* put 'personal',2,'personal_data:name','Franco'
+		* put 'personal',2,'personal_data:city','Lima'
+		* put 'personal',2,'personal_data:age','32'
+		* put 'personal',3,'personal_data:name','Ivan'
+		* put 'personal',3,'personal_data:age','34'
+		* put 'personal',4,'personal_data:name','Eliecer'
+		* put 'personal',4,'personal_data:city','Caracas'
+
+		Obtener datos de una fila:
+		* get 'personal','4' (Este comando recupera todos los datos asociados con la fila '4' en la tabla 'personal'.)
+
+		Obtener datos de una columna específica en una fila:
+		* get 'personal', '4', {COLUMN => 'personal_data:city'} (Este comando recupera el valor de la columna 'city' en la fila '4' de la tabla 									'personal'.)
+		
+		Escanear toda la tabla:
+		* scan 'personal' (Este comando escanea y muestra todos los datos de la tabla 'personal'. Puede ser útil para ver todos los datos presentes 				  en la tabla.)
+
+		Eliminar una fila:
+		* delete 'personal', '4' (Este comando elimina la fila completa con clave '4' de la tabla 'personal'.)
+
+		Eliminar una columna específica en una fila:
+		* delete 'personal', '4', 'personal_data:city' (Este comando elimina el valor de la columna 'city' en la fila '4' de la tabla 'personal'.)
+
+		Desactivar y eliminar una tabla:
+		* disable 'personal' (Estos comandos desactivan y eliminan la tabla 'personal'. Desactivar la tabla es necesario antes de eliminarla.)
+		* drop 'personal'
+	
+	2-En el namenode del cluster:
+
+		* hdfs dfs -put personal.csv /hbase/data/ (en el mismo contenedor cortamos el archivo y pegamos en el dirtectorio de hdfs 'data' de hive)
+
+ 	3- Entramos al contenedor hbase-master
+		* exit (salimos del contenedor)
+		* sudo docker exec -it hbase-master bash (entramos a otro contenedor donde se copio el .csv)
+		* hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator=',' -Dimporttsv.columns=HBASE_ROW_KEY,personal_data:name,personal_data:city,personal_data:age personal hdfs://namenode:9000/hbase/data/personal.csv (El comando 										que proporcionas se utiliza para importar datos desde un archivo CSV a una 										tabla en HBase utilizando la herramienta ImportTsv.)
+	
+	4-iniciando una nueva interfas dentro del contenedor
+		* hbase shell (El comando hbase shell se utiliza para iniciar la interfaz de línea de comandos de HBase, conocida como el "HBase Shell". 			      Esta interfaz proporciona una manera interactiva de interactuar con HBase, ejecutando comandos directamente desde la 				      terminal.)
+	
+	5-Interactuamos de nuevo con la tabla como el el punto 1 de este mismo ejercicio
+		* scan 'personal' (Este comando escanea y muestra todos los datos de la tabla 'personal'.)
+		* create 'album','label','image' (Este comando crea una tabla llamada 'album' con dos familias de columnas llamada 'label' y 'image'.)
+		* put 'album','label1','label:size','10' (Este comando inserta un valor ('10') en la columna 'size' de la fila 'label1' en la familia de 								columnas 'label' de la tabla 'album'.)
+		* put 'album','label1','label:color','255:255:255'
+		* put 'album','label1','label:text','Family album'
+		* put 'album','label1','image:name','holiday'
+		* put 'album','label1','image:source','/tmp/pic1.jpg'
+
+		Obtener datos de una fila:
+		* get 'album','label1' (Este comando recupera todos los datos asociados con la fila 'label1' en la tabla 'album'.)
+
+	6-Cerrando todo, saliendo de los contenedores, ahora ya que aprendimos como convertir los indices de las tablas podemos si deseamos salir de todo
+  		* Ctrl+C (salimos de HBase) 'es como hive'
+ 		* exit (salimos del contenedor)
+  		* sudo docker-compose stop (paramos los contenedores)
+  		* cd (salimos del directorio DS-M4-Hue_Hive)
+  		* exit (salimos de ubuntu)
+  		* Vamos al Siguiente que estamos pilas...
+
+
+
+-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+2) MongoDB
+Instrucciones:
+
+Entrando al contenedor de MongoDB
+
+  * cd herramientas_big_data (entramos a la carpeta donde esta el archivo .yml)
+  * sudo docker-compose -f docker-compose-v3.yml up -d (aperturamos los conetendores que estan en .yml)
+  * sudo docker exec -it mongodb bash (entrando al contenedor)
+  * ls -ll (verificamos que archivos y directorios existen dentro del contenedor)
+  * cd data (entramos a la car'peta data del contenedor)
+  * ls -ll (vemos que no hestan los archivos ires)
+
+Retrocedemos al directorio 'herramientas_big_data' para copiar loa archivos iris
+
+  * exit (salimos del contenedor)
+  * ls -ll (no estan los archivos iris)
+  * cd Datasets (entramos al directorio por q aqui estan los archivos buscados)
+  * ls -ll (verificamos)
+
+Copiando los archivos iris de Datasets a data del contenedor
+
+  1) 	sudo docker cp iris.csv mongodb:/data/iris.csv  (copiando el archivo iris.csv)
+		sudo docker cp iris.json mongodb:/data/iris.json  (copiando el archivo iris.json)
+
+Entramos de nuevo al contenedor
+
+  * cd (salimos del directorio Datasets y nos quedamos en el direcotior de herramientas_big_data)
+  2)	sudo docker exec -it mongodb bash (entramos al contenedor MongoDB)
+
+Capiamos los archivos de nuestro contenedor al directorio 'dataprueba' que esta dentro del entorno virtual de 'mongosh' para poder manipularlo 
+
+  3) 	mongoimport /data/iris.csv --type csv --headerline -d dataprueba -c iris_csv (mongoimport: Este es el comando de la línea de comandos que se 											      utiliza para importar datos en una instancia de MongoDB.
+
+										     /data/iris.csv: Especifica la ubicación y el nombre del archivo CSV 										     que contiene los datos que se van a importar. En este caso, el archivo 										     se encuentra en la ruta "/data/iris.csv".
+
+										     --type csv: Indica el tipo de formato del archivo de entrada, que en 										     este caso es CSV.
+
+										     --headerline: Este argumento indica que la primera línea del archivo 										     CSV contiene los nombres de las columnas (encabezados). MongoDB 											     utilizará estos encabezados como nombres de campos para los documentos 										     en la colección.
+
+										     -d dataprueba: Especifica la base de datos a la que se va a importar 										     la información. En este caso, la base de datos se llama "dataprueba".
+
+										     -c iris_csv: Indica la colección en la que se deben almacenar los 											     datos. Aquí, los datos se guardarán en una colección llamada 											     "iris_csv".)
+
+	mongoimport --db dataprueba --collection iris_json --file /data/iris.json --jsonArray (mongoimport: Este es el comando de la línea de comandos que 												se utiliza para importar datos en una instancia de MongoDB.
+
+												--db dataprueba: Especifica la base de datos a la que se va 												a importar la información. En este caso, la base de datos 												se llama "dataprueba".
+
+												--collection iris_json: Indica la colección en la que se 												deben almacenar los datos. Aquí, los datos se guardarán en 												una colección llamada "iris_json".
+
+												--file /data/iris.json: Especifica la ubicación del archivo 												JSON que contiene los datos que se van a importar. En este 												caso, el archivo se encuentra en la ruta "/data/iris.json".
+
+												--jsonArray: Indica que el archivo de entrada es un arreglo 												JSON en lugar de un documento JSON único. Esto es necesario 												cuando el archivo contiene un array de documentos JSON en 												lugar de un solo documento JSON.)
+
+Entramos al entorno virtual de 'mongosh'
+
+  4) mongosh
+
+Manipulamos la data
+
+		use dataprueba (entramos al directorio dataprueba)
+		show collections (nos muestra los archivos iris)
+		db.iris_csv.find() (muestra el documento json para poder leerlo)
+		db.iris_json.find() (dentro del find puedes consultar si existe la clave valor tal {species: 'setosa'})
+
+Ya aprendido a ver el archivo poro aun no a manipularlo (otro momento), continuamos con la exportacion del documento
+
+  * exit (salimos del entorno virtual hacia el contenedor)
+  5) 	* mongoexport --db dataprueba --collection iris_csv --fields sepal_length,sepal_width,petal_length,petal_width,species --type=csv --out /data/iris_export.csv (guarda en el directorio data un archivo llamado iris_export.csv de los datos trabajados para poder descargar despues)
+	
+	* mongoexport --db dataprueba --collection iris_json --fields sepal_length,sepal_width,petal_length,petal_width,species --type=json --out /data/iris_export.json
+
+Las paginas de descarga de archivos es desde https://search.maven.org/search?q=g:org.mongodb.mongo-hadoop los jar: 
+					     https://search.maven.org/search?q=a:mongo-hadoop-hive, 
+					     https://search.maven.org/search?q=a:mongo-hadoop-spark
+
+Copiando archivos de nuestro entorno ubuntu Mongo al entorno 'hive-server' del contendor MongoDB (es otro entorno diferente a 'mongosh')
+
+  * exit (salimos del contenedor y nos ubicamos en el directrio herramientas_big_data)
+  * ls (vemos los directorios dentro de herramientas_big_data)
+  * cd Mongo (entramos al directorio Mongo ya que aqui estan los archivos .jar que nos indican copiar en la practica)
+  6)	* sudo docker cp mongo-hadoop-hive-2.0.2.jar hive-server:/opt/hive/lib/mongo-hadoop-hive-2.0.2.jar 
+	* sudo docker cp mongo-hadoop-core-2.0.2.jar hive-server:/opt/hive/lib/mongo-hadoop-core-2.0.2.jar
+	* sudo docker cp mongo-hadoop-spark-2.0.2.jar hive-server:/opt/hive/lib/mongo-hadoop-spark-2.0.2.jar
+	* sudo docker cp mongo-java-driver-3.12.11.jar hive-server:/opt/hive/lib/mongo-java-driver-3.12.11.jar
+	* sudo docker cp mongo-scala-driver-0.8.15.jar hive-server:/opt/hive/lib/mongo-scala-driver-0.8.15.jar (copiando archivos desde esta carpeta al 														entorno virtual del contenedor)
+
+Tambien copiamos en archivo irir.hql q esta en el directorio herramientas_big_data
+
+  * cd .. (salimos de la carpeta Mongo)
+  7)	* sudo docker cp iris.hql hive-server:/opt/iris.hql (copiamos al contenedor hive-server el archivo .hql para correrlo y para q funcione estan 							    	    los	archivos anteriores ya copiados donde esta la data, ya que, el .hql solo hay querys)
+	* sudo docker exec -it hive-server bash (entramos al contenedor hive-server)
+
+creamos el directorio donde vamos a guardar los archivos
+
+	* hdfs dfs -mkdir -p /tmp/udfs
+
+copiamos los archivos
+
+	* hdfs dfs -put /opt/hive/lib/mongo-hadoop-hive-2.0.2.jar /tmp/udfs
+	hdfs dfs -put /opt/hive/lib/mongo-hadoop-core-2.0.2.jar /tmp/udfs
+	hdfs dfs -put /opt/hive/lib/mongo-java-driver-3.12.11.jar /tmp/udfs
+	hdfs dfs -put /opt/hive/lib/mongo-hadoop-spark-2.0.2.jar /tmp/udfs
+	hdfs dfs -put /opt/hive/lib/mongo-scala-driver-0.8.15.jar /tmp/udfs
+
+
+///////////////
+Aqui ya no se puede hacer nada lo siento jajaja y segun la clase miercoles 24/01/2024 mongo esta funcionando mal por eso no se copiaba los archivos para correr el .hql
+
+  8) 	* hiveserver2 (ahora entramos al servidor de consultas del contenedor hive-server no de Mongosh ojo!!)
+	* ls -ll (ver los permisos antes de)
+	* chmod 777 iris.hql (dando los permisos necesarios para la lectura)
+	* ls -ll (ver los permisos despues de)
+	* hive -f iris.hql
+/////////////////
+6-Cerrando todo, saliendo de los contenedores, ahora ya que aprendimos como convertir los indices de las tablas podemos si deseamos salir de todo
+  		* Ctrl+C (salimos de HBase) 'es como hive'
+ 		* exit (salimos del contenedor)
+  		* sudo docker-compose stop (paramos los contenedores)
+  		* cd (salimos del directorio herramientas_big_data)
+  		* exit (salimos de ubuntu)
+  		* Vamos al Siguiente que estamos pilas...
+
+
+
+/*/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+**
+3) Neo4J
+Ejemplo de búsqueda del camino más corto:
+	https://neo4j.com/docs/graph-data-science/current/algorithms/dijkstra-source-target/
+		CREATE (a:Location {name: 'A'}),
+			   (b:Location {name: 'B'}),
+			   (c:Location {name: 'C'}),
+			   (d:Location {name: 'D'}),
+			   (e:Location {name: 'E'}),
+			   (f:Location {name: 'F'}),
+			   (a)-[:ROAD {cost: 50}]->(b),
+			   (b)-[:ROAD {cost: 50}]->(a),
+			   (a)-[:ROAD {cost: 50}]->(c),
+			   (c)-[:ROAD {cost: 50}]->(a),
+			   (a)-[:ROAD {cost: 100}]->(d),
+			   (d)-[:ROAD {cost: 100}]->(a),
+			   (b)-[:ROAD {cost: 40}]->(d),
+			   (d)-[:ROAD {cost: 40}]->(b),
+			   (c)-[:ROAD {cost: 40}]->(d),
+			   (d)-[:ROAD {cost: 40}]->(c),
+			   (c)-[:ROAD {cost: 80}]->(e),
+			   (e)-[:ROAD {cost: 80}]->(c),
+			   (d)-[:ROAD {cost: 30}]->(e),
+			   (e)-[:ROAD {cost: 30}]->(d),
+			   (d)-[:ROAD {cost: 80}]->(f),
+			   (f)-[:ROAD {cost: 80}]->(d),
+			   (e)-[:ROAD {cost: 40}]->(f),
+			   (f)-[:ROAD {cost: 40}]->(e);
+			   
+		CALL gds.graph.project(
+			'miGrafo',
+			'Location',
+			'ROAD',
+			{
+				relationshipProperties: 'cost'
+			}
+		)
+
+		MATCH (l:Location) RETURN l
+					
+		MATCH (source:Location {name: 'A'}), (target:Location {name: 'E'})
+		CALL gds.shortestPath.dijkstra.write.estimate('miGrafo', {
+			sourceNode: source,
+			targetNode: target,
+			relationshipWeightProperty: 'cost',
+			writeRelationshipType: 'PATH'
+		})
+		YIELD nodeCount, relationshipCount, bytesMin, bytesMax, requiredMemory
+		RETURN nodeCount, relationshipCount, bytesMin, bytesMax, requiredMemory
+
+		MATCH (source:Location {name: 'A'}), (target:Location {name: 'E'})
+		CALL gds.shortestPath.dijkstra.stream('miGrafo', {
+			sourceNode: source,
+			targetNode: target,
+			relationshipWeightProperty: 'cost'
+		})
+		YIELD index, sourceNode, targetNode, totalCost, nodeIds, costs, path
+		RETURN
+			index,
+			gds.util.asNode(sourceNode).name AS sourceNodeName,
+			gds.util.asNode(targetNode).name AS targetNodeName,
+			totalCost,
+			[nodeId IN nodeIds | gds.util.asNode(nodeId).name] AS nodeNames,
+			costs,
+			nodes(path) as path
+		ORDER BY index
+Ejemplo de logística: https://neo4j.com/docs/graph-data-science/current/alpha-algorithms/minimum-weight-spanning-tree/
+
+		MATCH (n:Location {name: 'A'})
+		CALL gds.alpha.spanningTree.minimum.write('miGrafo', {
+		  startNodeId: id(n),
+		  relationshipWeightProperty: 'cost',
+		  writeProperty: 'MINST',
+		  weightWriteProperty: 'writeCost'
+		})
+		YIELD preProcessingMillis, computeMillis, writeMillis, effectiveNodeCount
+		RETURN preProcessingMillis, computeMillis, writeMillis, effectiveNodeCount;		
+
+		MATCH path = (n:Location {name: 'A'})-[:MINST*]-()
+		WITH relationships(path) AS rels
+		UNWIND rels AS rel
+		WITH DISTINCT rel AS rel
+		RETURN startNode(rel).name AS source, endNode(rel).name AS destination, rel.writeCost AS cost
+		
+		MATCH (n) DETACH DELETE n
+
+		sudo docker cp producto.csv neo4j:/var/lib/neo4j/import/producto.csv
+		sudo docker cp tipo_producto.csv neo4j:/var/lib/neo4j/import/tipo_producto.csv
+		sudo docker cp cliente.csv neo4j:/var/lib/neo4j/import/cliente.csv
+		sudo docker cp venta.csv neo4j:/var/lib/neo4j/import/venta.csv
+		
+		Ver Archivo "ejemploNeo4J.txt"		
+
+
+** No se entiende nada
+4) Zeppelin
+	HDFS:
+	En la máquina anfitrión probar WebHDFS:
+		curl "http://<IP_Anfitrion>:9870/webhdfs/v1/?op=LISTSTATUS"
+		
+	En el interpreter:
+		En la parte de "file"
+			Variable hdfs.url = http://<IP_Anfitrion>:9870/webhdfs/v1/
+			
+	En nuevo notebook / nueva nota:
+		%file
+		ls /
+
+	Neo4J:
+	En el interpreter
+		En la parte de "neo4J"
+			Variables 
+				neo4J.url = http://<IP_Anfitrion>:7687
+				neo4j.auth.user	= neo4j
+				neo4j.auth.password	= zeppelin
+
+
+-----------------------
+
+
+
+HASTA AQUI NOS MAS LLEGUE, CONTINUARE DESPUES.
