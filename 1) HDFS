@@ -1,0 +1,86 @@
+Cuando tengan contenedores que no quieren parar o por q estan em otras carpetas aplicar esto 100% efectivo
+sudo docker stop $(sudo docker ps -a -q) --> detiene todos
+
+Practica Integradora
+Durante esta practica la idea es emular un ambiente de trabajo, desde un área de innovación solicitan construir un MVP(Producto viable mínimo) de un ambiente de Big Data donde se deban cargar unos archivos CSV que anteriormente se utilizaban en un datawarehouse en MySQl, pero ahora en un entorno de Hadoop.
+
+Desde la gerencia de Infraestructura no están muy convencidos de utilizar esta tecnología por lo que no se asigno presupuesto alguna para esta iniciativa, de forma tal que por el momento no es posible utilizar un Vendor(Azure, AWS, Google) para implementar dicho entorno, es por esto que todo el MVP se deberá implementar utilizando Docker de forma tal que se pueda hacer una demo al sector de infraestructura mostrando las ventajas de utilizar tecnologías de Big Data.
+
+Entorno Docker con Hadoop, Spark y Hive
+Se pesenta un entorno Docker con Hadoop (HDFS) y la implementación de:
+
+Spark
+Hive
+HBase
+MongoDB
+Neo4J
+Zeppelin
+Kafka
+Es importante mencionar que el entorno completo consume muchos recursos de su equipo, motivo por el cuál, se propondrán ejercicios pero con ambientes reducidos, en función de las herramientas utilizadas.
+
+Ejecute docker network inspect en la red (por ejemplo, docker-hadoop-spark-hive_default) para encontrar la IP en la que se publican las interfaces de hadoop. Acceda a estas interfaces con las siguientes URL:
+
+Namenode: http://<IP_Anfitrion>:9870/dfshealth.html#tab-overview
+Datanode: http://<IP_Anfitrion>:9864/
+Spark master: http://<IP_Anfitrion>:8080/
+Spark worker: http://<IP_Anfitrion>:8081/	
+HBase Master-Status: http://<IP_Anfitrion>:16010
+HBase Zookeeper_Dump: http://<IP_Anfitrion>:16010/zk.jsp
+HBase Region_Server: http://<IP_Anfitrion>:16030
+Zeppelin: http://<IP_Anfitrion>:8888
+Neo4j: http://<IP_Anfitrion>:7474
+Para implementar ejecute
+
+  git clone https://github.com/lopezdar222/herramientas_big_data
+  cd herramientas_big_data
+			-->  sudo docker-compose -f docker-compose-vX.yml up -d
+
+1) HDFS
+Se puede utilizar el entorno docker-compose-v1.yml
+  
+  * cd herramientas_big_data (entramos a la carpeta donde esta el archivo .yml)
+  * sudo docker-compose -f docker-compose-v1.yml up -d (aperturamos los conetendores que estan en .yml)
+
+Copiar los archivos ubicados en la carpeta Datasets, dentro del contenedor "namenode"
+
+  * sudo docker exec -it namenode bash (entrando al contenedor namenode)
+  * ls -ll (para ver el las carpetas)
+  * cd home (entrando a la carpeta home)
+  * # mkdir Nombre_carpeta_a_crear (ya no lo creamos por q pasaremos uno con el mismo nombre)
+  * exit (salimos del contenedor a la carpeta prcipal)
+  * sudo docker cp Datasets namenode:/home (sudo docker cp <path><archivo> namenode:/home/Datasets/<archivo> --> copiamos la carpeta Datasets dentro del contenedor namenode en la carpeta home)
+
+Ubicarse en el contenedor "namenode"
+
+  * sudo docker exec -it namenode bash (ahora entramos de nuevo al contenedor y la carpeta Datasets lo pasaremos al directorio de HDFS)
+
+Verificando los archivos copiados
+
+  * ls -ll (ver los archivos y carpetas dentro del contenedor)
+  * cd home (entramos al directorio home)
+  * ls -ll (ve los archivos y carpetas dentro de home)
+  * cd Datasets (entramos a la carpeta Datasets)
+  * ls -ll (verificamos que los archivos copiados sean los mismos que Datasets de herramientas_big_data)
+  * cd y cd (salimos de las carpetas y nos mantenemos en el contenedor)
+ 
+Crear un directorio en HDFS llamado "/data".
+
+  * hdfs dfs -mkdir -p /data (creamos una carpeta dentro de HDFS llamada data)
+
+Copiar los archivos csv provistos a HDFS:
+
+  * hdfs dfs -put /home/Datasets/* /data (cortamos los documentos dentro de Datasets que esta en el contenedor y lo pegamos en la carpeta home que esta dentro de HDFS)
+
+Este proceso de creación de la carpeta data y copiado de los arhivos, debe poder ejecutarse desde un shell script.
+
+Nota: Busque dfs.blocksize y dfs.replication en http://<IP_Anfitrion>:9870/conf para encontrar los valores de tamaño de bloque y factor de réplica respectivamente entre otras configuraciones del sistema Hadoop.
+
+  * entran a http://<IP_Anfitrion>:9870/conf y buscan los archivos dfs.blocksize y dfs.replication.
+  
+Saliendo del todo, finish practica 1:
+
+  * exit (salimos del contenedor)
+  * sudo docker-compose stop (paramos los contenedores para salir y no usarlos más, puede poner down pero borra los datos trabajados).
+  * cd (returnoar a ubuntu)
+  * exit (cerrar todo)
+  * Tomarnos una birra que aprendimos la primera pregunta
