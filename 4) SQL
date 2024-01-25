@@ -1,0 +1,39 @@
+4) SQL
+La mejora en la velocidad de consulta que puede proporcionar un índice tiene el costo del procesamiento adicional para crear el índice y el espacio en disco para almacenar las referencias del índice. Se recomienda que los índices se basen en las columnas que utiliza en las condiciones de filtrado. El índice en la tabla puede degradar su rendimiento en caso de que no los esté utilizando. Crear índices en alguna de las tablas cargadas y probar los resultados:
+
+Ingresamos al sistema hive para realizar los procedimientos solicitados
+  * cd DS-M4-Hue_Hive (entrando al directorio donde estan los datos de nuestros contenedores)
+  * sudo docker-compose -f docker-compose-v2.yml up -d (arrancando los contenedores a usar)
+  * sudo docker exec -it hive-server bash (entrando en nuestro contenedor)
+  * cd .. (saliendo del directorio de /opt)
+  * cd home (entramos al directorio de home por que ahi esta buestros archivos copiados del punto 2)
+  * ls (si deseamos asegurarno ponemos ls para ver los directorios y archivos)
+  * hive (entramos a hive para manipular nuestras bases de datos .hql)
+  * SHOW DATABASES; (en hive podenos esta query para mostrar las bases de datos creadas a usar)
+  * USE INTEGRADOR; (seleccionamos la BBDD integrador, ya que es la que corrimos en el paso 2)
+
+Creación del índice compacto diferido tomando como referecia la tabla calendario, estructura es la siguiente:
+				
+  * CREATE INDEX index_id ON TABLE calendario (id) AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler' WITH DEFERRED REBUILD; (ahora cuando usemos la tabla calendario y el campo id la busqueda será mas rapido por el index creado)
+
+Si alteramos la tabla agregando mas datos entonces podemos hacer la actualizacion del index
+Agregando mas datos a la tabla calendario:
+
+-- Insertar datos de ejemplo
+  * INSERT INTO calendario VALUES (23001, 1988-23-01, 1988, 1, 1, 1, 1, 'Thursday', 'January'), (23002, 1988-24-01, 1988, 1, 1, 1, 1, 'Thursday', 'January'), (23003, 1988-25-01, 1988, 1, 1, 1, 1, 'Thursday', 'January');
+
+Una vez alterado la tabla tenemos q actualizar el index
+
+  * ALTER INDEX index_id ON calendario REBUILD;
+
+eliminando indices si no lo usamos ya que eso haria q el proceso de demore, solo se creara indices de los campos q usemos
+
+  * DROP INDEX IF EXISTS index_id ON calendario;
+
+Ahora ya que aprendimos como convertir los indices de las tablas podemos si deseamos salir de todo
+  * Ctrl+C (salimos de hive)
+  * exit (salimos del contenedor)
+  * sudo docker-compose stop (paramos los contenedores para q nos desgasten mas nuestra maquina)
+  * cd (salimos del directorio DS-M4-Hue_Hive)
+  * exit (salimos de ubuntu)
+  * Nos merecemos una dormidita para recuperar cerebro y seguir codeando...
