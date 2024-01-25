@@ -1,0 +1,58 @@
+2) Hive
+Se puede utilizar el entorno docker-compose-v2.yml
+
+  * cd herramientas_big_data (entramos a la carpeta donde esta el archivo .yml)
+  * sudo docker-compose -f docker-compose-v2.yml up -d (aperturamos los conetendores que estan en .yml)
+
+Copiar los archivos ubicados en la carpeta Datasets, dentro del contenedor "hive-server"
+
+  * sudo docker exec -it hive-server bash (entrando al contenedor namenode)
+  * ls -ll (para ver el las carpetas)
+  * mkdir home (creamos un directorio llamado Home donde pondremos los archivos .hql)
+
+Copiando archivos de nuestro sistema al directorio home de nuestro contenedor
+
+  * sudo docker cp Paso02.hql hive-server:/home (copiamos el archivo .hql dentro del directorio home de nuestro contenedo)
+
+Ubicarse en el contenedor "hive-server"
+
+  * sudo docker exec -it hive-server bash (ahora entramos de nuevo al contenedor y el archivo .hql lo pasaremos al directorio de HDFS)
+  * cd .. (ponemos cd espacio dos puntos -  es para salir de /otp ya que no nos dejara trabajar)
+  * ls -ll (ve los archivos y carpetas dentro de home)
+  * cd home (entramos al directorio home)
+  * ls -ll (ver el archivo Paso02.hql si existe o no, sino repasar todo de nuevo)
+
+Crear tablas en Hive, a partir de los csv ingestados en HDFS.
+Para esto, se puede ubicar dentro del contenedor correspondiente al servidor de Hive, y ejecutar desdea allí los scripts necesarios
+Este proceso de creación las tablas debe poder ejecutarse desde un shell script.
+
+Nota: Para ejecutar un script de Hive, requiere el comando: hive -f <script.hql>
+
+  * hive -f Paso02.hql (corremos el archivo .hql para crear la tabla)
+  * hive (una ves creada entramos a hive para poder manipularlo)
+
+Dentro de hive haremos lo siguiente
+
+  * SHOW DATABASES; (vemos si exite la base de datos --> hive> show databases;				(query)
+							 OK						(confirmacion)
+							 default					(mostrando q existe una BBDD llamada default)
+							 integrador					(otro BBDD)
+							 Time taken: 0.152 seconds, Fetched: 2 row(s))	(aqui confirma q son dos tablas)
+  * USE INTEGRADOR; (aqui entramos a usar la BBDD integrador)
+  * SHOW TABLES; (pedimos que nos muetre cuantas tablas hay en la BBDD)
+
+Despues de haber trabajdo si deseas cerrar todo
+
+  * Ctrl+C (para salir de hive)
+  * exit (salimos del contenedor)
+
+Para ver hadoo en un interfas
+
+  * http://localhost:9864/datanode.html (si deseas ver la pagina por donde se ve hadoo)
+
+Parando los contenedores
+
+  * sudo docker-compose stop (parando los contenedores y salir de WLS)
+  * cd (returnoar a ubuntu)
+  * exit (cerrar todo salimos de ubuntu)
+  * Nos Tomamos una segunda birra ya que aprendimos la segunda pregunta
